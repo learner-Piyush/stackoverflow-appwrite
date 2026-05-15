@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { answerCollection, db, questionCollection, voteCollection } from '@/models/name'
 import { databases, users } from '@/models/server/config'
 import { UserPrefs } from '@/store/auth'
@@ -101,4 +103,3 @@ const Page = async ({ searchParams }: { searchParams: SearchParams }) => {
 }
 
 export default Page
-
