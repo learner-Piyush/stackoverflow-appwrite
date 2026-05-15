@@ -68,7 +68,7 @@ function LoginPage() {
       <p className="mt-2 max-w-sm text-sm text-neutral-600 dark:text-neutral-300">
         Login to stackflow
         <br />
-        If you don't have an account,{" "}
+If you don&apos;t have an account,
         <Link href="/register" className="text-orange-500 hover:underline">
           register
         </Link>{" "}

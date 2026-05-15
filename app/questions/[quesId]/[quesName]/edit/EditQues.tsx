@@ -7,15 +7,25 @@ import { Models } from 'appwrite'
 import { useRouter } from 'next/navigation'
 import React from 'react'
 
-const EditQues = ({question}: {question: Models.Document}) => {
-    const {user} = useAuthStore()
+type QuestionDoc = Models.Document & {
+    authorId?: string;
+    title?: string;
+    $id: string;
+};
+
+const EditQues = ({ question }: { question: QuestionDoc }) => {
+    const { user } = useAuthStore()
     const router = useRouter()
 
     React.useEffect(() => {
-        if (question.authorId !== user?.$id) router.push(`/questions/${question.$id}/${slugify(question.title)}`)
-    }, [])
+        if (!question.authorId) return;
+        if (question.authorId !== user?.$id) {
+            router.push(`/questions/${question.$id}/${slugify(question.title ?? '')}`)
+        }
+    }, [question.$id, question.authorId, question.title, router, user?.$id])
 
     if (user?.$id !== question.authorId) return null
+
   return (
     <div className="block pb-20 pt-32">
         <div className="container mx-auto px-4">

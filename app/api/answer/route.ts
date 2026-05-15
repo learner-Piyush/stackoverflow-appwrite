@@ -17,10 +17,11 @@ export async function POST(request: NextRequest) {
         await users.updatePrefs(authorId, {reputation: Number(prefs.reputation) + 1})
 
         return NextResponse.json(response, {status: 201})
-    } catch (error: any) {
+    } catch (error) {
+        const message = (error as { message?: string })?.message;
         return NextResponse.json(
-            {error: error?.message || "Error creating answer"},
-            {status: error?.status || error?.code || 500}
+            {error: message || "Error creating answer"},
+            {status: (error as { status?: number; code?: number }).status ?? (error as { status?: number; code?: number }).code ?? 500}
         )
     }
 }
@@ -38,10 +39,11 @@ export async function DELETE(request: NextRequest) {
         await users.updatePrefs(answer.authorId, {reputation: Number(prefs.reputation) - 1})
 
         return NextResponse.json(response, {status: 200})
-    } catch (error: any) {
+    } catch (error) {
+        const message = (error as { message?: string })?.message;
         return NextResponse.json(
-            {error: error?.message || "Error deleting answer"},
-            {status: error?.status || error?.code || 500}
+            {error: message || "Error deleting answer"},
+            {status: (error as { status?: number; code?: number }).status ?? (error as { status?: number; code?: number }).code ?? 500}
         )
     }
 }

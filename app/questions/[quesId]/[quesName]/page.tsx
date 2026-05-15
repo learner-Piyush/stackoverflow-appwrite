@@ -36,36 +36,77 @@ const Page = async ({params}: {params: {quesId: string, quesName: string}}) => {
 
     const author = await users.get<UserPrefs>(question.authorId)
 
-    [comments.documents, answers.documents] = await Promise.all([Promise.all(
-        comments.documents.map(async comment => {
-            const author = await users.get<UserPrefs>(comment.authorId)
-            return {...comment, author: {$id: author.$id, name: author.name, reputation: author.prefs.reputation}}
+    const [updatedCommentsDocuments, updatedAnswersDocuments] = await Promise.all([
+      Promise.all(
+        comments.documents.map(async (comment) => {
+          const author = await users.get<UserPrefs>(comment.authorId)
+          return {
+            ...comment,
+            author: {
+              $id: author.$id,
+              name: author.name,
+              reputation: author.prefs.reputation,
+            },
+          }
         })
-    ),
-    Promise.all(answers.documents.map(async answer => {
-        const [author, comments, upvotes, downvotes] = await Promise.all([
+      ),
+      Promise.all(
+        answers.documents.map(async (answer) => {
+          const [author, answerComments, upvotes, downvotes] = await Promise.all([
             users.get<UserPrefs>(answer.authorId),
             databases.listDocuments(db, commentCollection, [
-                Query.orderDesc("$createdAt"), Query.equal("typeId", answer.$id), Query.equal("type", "answer")
+              Query.orderDesc("$createdAt"),
+              Query.equal("typeId", answer.$id),
+              Query.equal("type", "answer"),
             ]),
             databases.listDocuments(db, voteCollection, [
-                Query.equal("typeId", answer.$id), Query.equal("type", "answer"), Query.equal("voteStatus", "upvoted"), Query.limit(1)
+              Query.equal("typeId", answer.$id),
+              Query.equal("type", "answer"),
+              Query.equal("voteStatus", "upvoted"),
+              Query.limit(1),
             ]),
             databases.listDocuments(db, voteCollection, [
-                Query.equal("typeId", answer.$id), Query.equal("type", "answer"), Query.equal("voteStatus", "upvoted"), Query.limit(1)
+              Query.equal("typeId", answer.$id),
+              Query.equal("type", "answer"),
+              Query.equal("voteStatus", "downvoted"),
+              Query.limit(1),
             ]),
-        ])
+          ])
 
-        comments.documents = await Promise.all(comments.documents.map(async comment => {
-            const author = await users.get<UserPrefs>(comment.authorId)
-            return {...comment, author: {$id: author.$id, name: author.name, reputation: author.prefs.reputation}}
-        }))
+          const updatedAnswerCommentsDocuments = await Promise.all(
+            answerComments.documents.map(async (comment) => {
+              const author = await users.get<UserPrefs>(comment.authorId)
+              return {
+                ...comment,
+                author: {
+                  $id: author.$id,
+                  name: author.name,
+                  reputation: author.prefs.reputation,
+                },
+              }
+            })
+          )
 
-        return {...answer, comments, upvotesDocuments: upvotes, downvotesDocuments: downvotes, author: {
-            $id: author.$id, name: author.name, reputation: author.prefs.reputation
-        }}
-    }))
+          return {
+            ...answer,
+            comments: {
+              ...answerComments,
+              documents: updatedAnswerCommentsDocuments,
+            },
+            upvotesDocuments: upvotes,
+            downvotesDocuments: downvotes,
+            author: {
+              $id: author.$id,
+              name: author.name,
+              reputation: author.prefs.reputation,
+            },
+          }
+        })
+      ),
     ])
+
+    comments.documents = updatedCommentsDocuments
+    answers.documents = updatedAnswersDocuments
   return (
     <TracingBeam className="container pl-6">
         <Particles className="fixed inset-0 h-full w-full" quantity={500} ease={100} color="#ffffff" refresh />
@@ -97,8 +138,14 @@ const Page = async ({params}: {params: {quesId: string, quesName: string}}) => {
                 <div className="w-full overflow-auto">
                     <MarkdownPreview className="rounded-xl p-4" source={question.content} />
                     <picture>
-                        <img src={storage.getFilePreview(questionAttachmentBucket, question.attachmentId).href}
-                        alt={question.title} className="mt-3 rounded-lg"/>
+                        <img
+                          src={storage.getFilePreview(
+                            questionAttachmentBucket,
+                            question.attachmentId
+                          )}
+                          alt={question.title}
+                          className="mt-3 rounded-lg"
+                        />
                     </picture>
                     <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
                         {question.tags.map((tag: string) => (
@@ -109,8 +156,13 @@ const Page = async ({params}: {params: {quesId: string, quesName: string}}) => {
                     </div>
                     <div className="mt-4 flex items-center justify-end gap-1">
                         <picture>
-                            <img src={avatars.getInitials(author.name, 36, 36).href} alt={author.name} className="rounded-lg"/>
+                            <img
+                              src={avatars.getInitials(author.name, 36, 36)}
+                              alt={author.name}
+                              className="rounded-lg"
+                            />
                         </picture>
+
                         <div className="block leading-tight">
                             <Link href={`/users/${author.$id}/${slugify(author.name)}`} className="text-orange-500 hover:text-orange-600">
                                 {author.name}

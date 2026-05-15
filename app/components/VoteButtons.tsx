@@ -9,12 +9,16 @@ import { Models, Query } from 'appwrite'
 import { useRouter } from 'next/navigation'
 import React from 'react'
 
+type VoteUI = Models.Document & {
+  voteStatus?: string
+}
+
 const VoteButtons = ({
     type, id, upvotes, downvotes, className
 }: {
     type: "question" | "answer", id: string, upvotes: Models.DocumentList<Models.Document>, downvotes: Models.DocumentList<Models.Document>, className?: string
 }) => {
-    const [voteDocument, setVoteDocument] = React.useState<Models.Document | null>()
+const [voteDocument, setVoteDocument] = React.useState<VoteUI | null>(null)
     const [voteResult, setVoteResult] = React.useState<number>(upvotes.total - downvotes.total)
 
     const {user} = useAuthStore()
@@ -43,12 +47,12 @@ const VoteButtons = ({
             })
             const data = await response.json()
 
-            if (!response.ok) throw data
+if (!response.ok) throw data
 
             setVoteResult(() => data.data.voteResult)
-            setVoteDocument(() => data.data.document)
-        } catch (error: any) {
-            window.alert(error?.message || "Something went wrong")
+            setVoteDocument(() => data.data.document as VoteUI)
+        } catch (error) {
+            window.alert((error as { message?: string })?.message || "Something went wrong")
         }
     }
 
@@ -64,12 +68,12 @@ const VoteButtons = ({
             })
             const data = await response.json()
 
-            if (!response.ok) throw data
+if (!response.ok) throw data
 
             setVoteResult(() => data.data.voteResult)
-            setVoteDocument(() => data.data.document)
-        } catch (error: any) {
-            window.alert(error?.message || "Something went wrong")
+            setVoteDocument(() => data.data.document as VoteUI)
+        } catch (error) {
+            window.alert((error as { message?: string })?.message || "Something went wrong")
         }
     }
   return (
