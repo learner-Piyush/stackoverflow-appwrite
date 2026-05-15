@@ -27,8 +27,15 @@ const Page = async ({params, searchParams}: {params: {userId: string, userSlug: 
             ])
 
             return {
-                ...ques, totalAnswers: answers.total, totalVotes: votes.total, author: {
-                    $id: author.$id, reputation: author.prefs.reputation, name: author.name
+                ...ques,
+                title: ques.title,
+                tags: ques.tags,
+                totalAnswers: answers.total,
+                totalVotes: votes.total,
+                author: {
+                    $id: author.$id,
+                    reputation: author.prefs.reputation,
+                    name: author.name
                 }
             }
         })
