@@ -6,6 +6,8 @@ import { UserPrefs } from '@/store/auth'
 import { Query } from 'node-appwrite'
 import React from 'react'
 
+export const dynamic = 'force-dynamic'
+
 const Page = async ({params, searchParams}: {params: {userId: string, userSlug: string}, searchParams: {page?: string}}) => {
     searchParams.page ||= "1"
 
